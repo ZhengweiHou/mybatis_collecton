@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+	<properties resource="db.properties" />
+
+	<typeAliases>
+	<!-- MyBatis默认的设置别名的方式就是去除类所在的包后的简单的类名
+        比如me.hzw.mybatis_crud.domain.User这个实体类的别名就会被设置成User -->
+		<package name="me.hzw.mybatis_collection.domain"/>
+	</typeAliases>
+	
+	<environments default="development">
+		<environment id="development">
+			<transactionManager type="JDBC" />
+			<dataSource type="POOLED">
+				<property name="driver" value="${driver}" />
+				<property name="url" value="${url}" />
+				<property name="username" value="${username}" />
+				<property name="password" value="${password}" />
+			</dataSource>
+		</environment>
+	</environments>
+
+
+
+	<mappers>
+		<mapper resource="me/hzw/mybatis_collection/mapping/classesMapper.xml"/>
+	</mappers>
+
+</configuration>

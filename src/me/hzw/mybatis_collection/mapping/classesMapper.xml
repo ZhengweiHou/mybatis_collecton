@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="me.hzw.mybatis_collection.mapping.classesMapper">
+
+	<!-- 根据班级id查询班级信息(带老师的信息)
+	##1. 联表查询 SELECT * FROM class c,teacher t WHERE 
+		c.teacher_id=t.t_id AND c.c_id=1;
+	##2. 执行两次查询 SELECT * FROM class WHERE c_id=1; 
+		//teacher_id=1 SELECT * FROM teacher WHERE t_id=1;//使用上面得到的teacher_id -->
+
+	<!-- 方式一：嵌套结果：使用嵌套结果映射来处理重复的联合结果的子集 封装联表查询的数据(去除重复的数据) select * from class 
+		c, teacher t where c.teacher_id=t.t_id and c.c_id=1 -->
+	<!-- 使用resultMap映射实体类和字段之间的一一对应关系 -->
+	<resultMap type="Classes" id="classes1">
+		<id property="id" column="c_id" />
+		<result property="name" column="c_name" />
+		<association property="teacher" javaType="Teacher">
+			<id property="id" column="t_id" />
+			<result property="name" column="t_name" />
+		</association>
+	</resultMap>
+	<select id="getClasses1" parameterType="int" resultMap="classes1">
+		select *
+		from class c,teacher t where c.teacher_id=t.t_id and c.c_id=#{id}
+	</select>
+
+
+	<!-- 方式二：嵌套查询：通过执行另外一个SQL映射语句来返回预期的复杂类型 SELECT * FROM class WHERE c_id=1; 
+		SELECT * FROM teacher WHERE t_id=1 //1 是上一个查询得到的teacher_id的值 -->
+	<resultMap type="Classes" id="classes2">
+		<id property="id" column="c_id" />
+		<result property="name" column="c_name" />
+		<association property="teacher" column="teacher_id" select="getTeacher"/>
+	</resultMap>
+	<select id="getTeacher" parameterType="int" resultType="Teacher">
+		select t_id id,t_name name from teacher where t_id=#{id}
+	</select>
+	<select id="getClasses2" parameterType="int" resultMap="classes2">
+		select * from class where c_id=#{id}
+	</select>
+	
+	
+	
+	
+	
+	<!--
+          根据classId查询对应的班级信息,包括学生,老师
+	-->
+	
+    <!--
+      方式一: 嵌套结果: 使用嵌套结果映射来处理重复的联合结果的子集
+      SELECT * FROM class c, teacher t,student s WHERE c.teacher_id=t.t_id AND c.C_id=s.class_id AND  c.c_id=1
+	-->
+	<resultMap type="Classes" id="classes3">
+		<id property="id" column="c_id" />
+		<result property="name" column="c_name" />
+		<association property="teacher" javaType="Teacher">
+			<id property="id" column="t_id" />
+			<result property="name" column="t_name" />
+		</association>
+		<collection property="students" ofType="Student">
+			<id property="id" column="s_id"/>
+			<result property="name" column="s_name"/>
+		</collection>
+	</resultMap>
+	<select id="getClasses3" parameterType="int" resultMap="classes3">
+		select * from class c,teacher t,student s where c.teacher_id=t.t_id and s.class_id=c.c_id and c.c_id=#{id}
+	</select>
+	
+	
+	 <!--
+         方式二：嵌套查询：通过执行另外一个SQL映射语句来返回预期的复杂类型
+             SELECT * FROM class WHERE c_id=1;
+             SELECT * FROM teacher WHERE t_id=1   //1 是上一个查询得到的teacher_id的值
+             SELECT * FROM student WHERE class_id=1  //1是第一个查询得到的c_id字段的值
+     -->
+	<resultMap type="Classes" id="classes4">
+		<id property="id" column="c_id" />
+		<result property="name" column="c_name" />
+		<association property="teacher" column="teacher_id" select="getTeacher2"/>
+		<collection property="students" column="c_id" ofType="Student" select="getStudent"></collection>
+	</resultMap>
+	<select id="getTeacher2" parameterType="int" resultType="Teacher">
+		select t_id id,t_name name from teacher where t_id=#{id}
+	</select>
+	<select id="getStudent" parameterType="int" resultType="Student">
+		select s_id id,s_name name from student where class_id=#{c_id}
+	</select>
+	<select id="getClasses4" parameterType="int" resultMap="classes4">
+		select * from class where c_id=#{id}
+	</select>
+	
+	
+	
+
+</mapper>
